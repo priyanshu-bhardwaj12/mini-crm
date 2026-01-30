@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini CRM Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+  <div class="top-bar">
+  <span class="app-name">Mini CRM</span>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+  <h1 class="title">Mini CRM – Dashboard</h1>
+
+  <!-- 🔢 STATS -->
+  <div class="stats">
+
+    <div class="card">
+      <h3>Total Leads</h3>
+      <p class="counter" id="totalLeads">0</p>
+    </div>
+
+    <div class="card">
+      <h3>New Leads</h3>
+      <p class="counter" id="newLeads">0</p>
+    </div>
+
+    <div class="card">
+      <h3>Contacted</h3>
+      <p class="counter" id="contactedLeads">0</p>
+    </div>
+
+    <div class="card">
+      <h3>Converted</h3>
+      <p class="counter" id="convertedLeads">0</p>
+    </div>
+
+  </div>
+
+  <!-- 📊 GRAPHS -->
+  <div class="graphs">
+
+    <!-- BAR GRAPH -->
+    <div class="graph-card">
+      <h3>Lead Status</h3>
+
+      <div class="bars">
+        <div class="bar">
+          <span>New</span>
+          <div class="fill" id="barNew"></div>
+        </div>
+
+        <div class="bar">
+          <span>Contacted</span>
+          <div class="fill" id="barContacted"></div>
+        </div>
+
+        <div class="bar">
+          <span>Converted</span>
+          <div class="fill" id="barConverted"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DONUT -->
+    <div class="graph-card">
+      <h3>Conversion Rate</h3>
+      <div class="donut" id="donut">
+        <span id="conversionRate">0%</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- 📋 LEADS TABLE -->
+<div class="table-card">
+  <h3>Leads Data</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="leadsTable"></tbody>
+  </table>
+</div>
+
+<!-- ✅ SCRIPT AT END -->
+<script>
+async function loadAnalytics() {
+  const res = await fetch("http://localhost:5000/analytics");
+  const data = await res.json();
+
+  animateCounter("totalLeads", data.total);
+  animateCounter("newLeads", data.newLeads);
+  animateCounter("contactedLeads", data.contacted);
+  animateCounter("convertedLeads", data.converted);
+
+  // Bars (percentage based)
+  const total = data.total || 1;
+  document.getElementById("barNew").style.height =
+    (data.newLeads / total) * 100 + "%";
+
+  document.getElementById("barContacted").style.height =
+    (data.contacted / total) * 100 + "%";
+
+  document.getElementById("barConverted").style.height =
+    (data.converted / total) * 100 + "%";
+
+  // Donut
+  document.getElementById("donut").style.setProperty(
+    "--percent",
+    data.conversionRate
+  );
+
+  document.getElementById("conversionRate").innerText =
+    data.conversionRate + "%";
+}
+
+/* 🔢 COUNTER ANIMATION */
+function animateCounter(id, value) {
+  const el = document.getElementById(id);
+  let start = 0;
+  const step = value / 40;
+
+  const interval = setInterval(() => {
+    start += step;
+    if (start >= value) {
+      el.innerText = value;
+      clearInterval(interval);
+    } else {
+      el.innerText = Math.floor(start);
+    }
+  }, 20);
+}
+function logout() {
+  localStorage.removeItem("admin");
+  window.location.href = "login.html";
+}
+
+loadAnalytics();
+async function loadLeads() {
+  const res = await fetch("http://localhost:5000/leads");
+  const leads = await res.json();
+
+  const table = document.getElementById("leadsTable");
+  table.innerHTML = "";
+
+  leads.forEach(lead => {
+    table.innerHTML += `
+      <tr>
+        <td>${lead.name}</td>
+        <td>${lead.email}</td>
+        <td>${lead.phone || "-"}</td>
+        <td>
+          <span class="status ${lead.status}">
+            ${lead.status}
+          </span>
+        </td>
+      </tr>
+    `;
+  });
+}loadAnalytics();
+loadLeads();
+</script>
+
+</body>
