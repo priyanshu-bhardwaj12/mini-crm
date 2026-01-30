@@ -1,4 +1,4 @@
-const API = "http://localhost:5000";
+const API = "https://mini-crm-3w1j.onrender.com";
 
 if (!localStorage.getItem("loggedIn")) {
   window.location.href = "login.html";
